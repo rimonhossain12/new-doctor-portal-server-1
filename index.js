@@ -90,6 +90,12 @@ async function run() {
             return res.send({ success: true, result });
         });
 
+        app.get('/booking', async (req, res) => {
+            const patient = req.query.patient;
+            const query = { patient: patient };
+            const bookings = await bookingCollections.find(query).toArray();
+            res.send(bookings);
+        })
         /**
       * API Naming Convention
       * app.get('/'booking') // get all the booking in this collection or get more than or by filter
