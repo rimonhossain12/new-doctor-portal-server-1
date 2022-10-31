@@ -28,6 +28,7 @@ async function run() {
             const service = await cursor.toArray();
             res.send(service);
         });
+
        /* app.get('/available', async (req, res) => {
             const date = req.query.date || 'Oct 31, 2022'
             // step 1: get all services            
