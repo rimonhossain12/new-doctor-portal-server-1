@@ -43,7 +43,9 @@ async function run() {
             const result = await userCollections.updateOne(filter, updateDoc, options);
             console.log(result);
             res.send(result);
-        })
+        });
+
+        
 
         /* app.get('/available', async (req, res) => {
              const date = req.query.date || 'Oct 31, 2022'
