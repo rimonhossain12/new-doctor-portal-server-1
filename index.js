@@ -21,6 +21,7 @@ async function run() {
         await client.connect();
         const serviceCollections = client.db('doctors_portal-1').collection('services');
         const bookingCollections = client.db('doctors_portal-1').collection('bookings');
+        const userCollections = client.db('doctors_portal-1').collection('users');
 
         app.get('/services', async (req, res) => {
             const query = {};
@@ -29,27 +30,41 @@ async function run() {
             res.send(service);
         });
 
-       /* app.get('/available', async (req, res) => {
-            const date = req.query.date || 'Oct 31, 2022'
-            // step 1: get all services            
-            const services = await serviceCollections.find().toArray();
-            // step 2 : get the booking of that day
-            const query = { date: date };
-            const bookings = await bookingCollections.find(query).toArray();
-            // step 3 : for each service, find bookings for that service
-            services.forEach(service => {
-                const serviceBookings = bookings.filter(b => b.treatment === service.name);
-                const booked = serviceBookings.map(s => s.slot);
-                const available = service.slots.filter(s => !booked.includes(s));
-                service.available = available;
+        app.put('/users/:email', async (req, res) => {
+            console.log('api is hitting')
+            const email = req.params.email;
+            const user = req.body;
+            console.log('user found = ', user);
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: user,
+            };
+            const result = await userCollections.updateOne(filter, updateDoc, options);
+            console.log(result);
+            res.send(result);
+        })
 
-                // service.booked = booked;
-                // service.booked = serviceBookings.map(s => s.slot);
-            })
-            res.send(services);
-
-        }) */
-
+        /* app.get('/available', async (req, res) => {
+             const date = req.query.date || 'Oct 31, 2022'
+             // step 1: get all services            
+             const services = await serviceCollections.find().toArray();
+             // step 2 : get the booking of that day
+             const query = { date: date };
+             const bookings = await bookingCollections.find(query).toArray();
+             // step 3 : for each service, find bookings for that service
+             services.forEach(service => {
+                 const serviceBookings = bookings.filter(b => b.treatment === service.name);
+                 const booked = serviceBookings.map(s => s.slot);
+                 const available = service.slots.filter(s => !booked.includes(s));
+                 service.available = available;
+ 
+                 // service.booked = booked;
+                 // service.booked = serviceBookings.map(s => s.slot);
+             })
+             res.send(services);
+ 
+         }) */
 
         // !warning about this api
         // This is not the proper way to query
@@ -96,6 +111,7 @@ async function run() {
             const bookings = await bookingCollections.find(query).toArray();
             res.send(bookings);
         })
+
         /**
       * API Naming Convention
       * app.get('/'booking') // get all the booking in this collection or get more than or by filter
