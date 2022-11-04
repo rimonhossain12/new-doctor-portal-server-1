@@ -17,6 +17,9 @@ app.use(cors());
 app.use(express.json());
 
 
+// function verifyToken 
+
+
 async function run() {
     try {
         await client.connect();
@@ -112,6 +115,10 @@ async function run() {
 
         app.get('/booking', async (req, res) => {
             const patient = req.query.patient;
+            
+
+            console.log('auth header', authorization);
+
             const query = { patient: patient };
             const bookings = await bookingCollections.find(query).toArray();
             res.send(bookings);
