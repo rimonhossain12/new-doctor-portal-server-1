@@ -52,28 +52,38 @@ async function run() {
             res.send(service);
         });
 
-        app.get('/allUsers', async (req, res) => {
+        app.get('/allUsers', verifyToken, async (req, res) => {
             const users = await userCollections.find().toArray();
             res.send(users);
         });
-        
+
         app.put('/users/:email', async (req, res) => {
-            console.log('api is hitting')
+            // console.log('api is hitting')
             const email = req.params.email;
             const user = req.body;
-            console.log('user found = ', user);
+            // console.log('user found = ', user);
             const filter = { email: email };
             const options = { upsert: true };
             const updateDoc = {
                 $set: user,
             };
             const result = await userCollections.updateOne(filter, updateDoc, options);
-
             const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
 
             res.send({ result, token });
         });
 
+        // admin route
+        app.put('/users/admin/:email', verifyToken, async (req, res) => {
+            const email = req.params.email;
+            const filter = { email: email };
+
+            const updateDoc = {
+                $set: { role: 'admin' },
+            };
+            const result = await userCollections.updateOne(filter, updateDoc);
+            res.send(result)
+        })
 
         // !warning about this api
         // This is not the proper way to query
