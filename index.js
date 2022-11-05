@@ -17,12 +17,30 @@ app.use(cors());
 app.use(express.json());
 
 
-// function verifyToken 
+function verifyToken(req, res, next) {
+    const authHeader = req.headers.authorization;
+    // console.log('Token = ', authHeader)
+    if (!authHeader) {
+        return res.status(401).send({ message: 'unAuthorized access' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
+        if (err) {
+            return res.status(403).send({ message: 'Forbidden access!' })
+        }
+        req.decoded = decoded;
+        next();
+
+    });
+
+}
 
 
 async function run() {
     try {
         await client.connect();
+        console.log('Hello doctor portal server running');
         const serviceCollections = client.db('doctors_portal-1').collection('services');
         const bookingCollections = client.db('doctors_portal-1').collection('bookings');
         const userCollections = client.db('doctors_portal-1').collection('users');
@@ -51,28 +69,6 @@ async function run() {
             res.send({ result, token });
         });
 
-
-
-        /* app.get('/available', async (req, res) => {
-             const date = req.query.date || 'Oct 31, 2022'
-             // step 1: get all services            
-             const services = await serviceCollections.find().toArray();
-             // step 2 : get the booking of that day
-             const query = { date: date };
-             const bookings = await bookingCollections.find(query).toArray();
-             // step 3 : for each service, find bookings for that service
-             services.forEach(service => {
-                 const serviceBookings = bookings.filter(b => b.treatment === service.name);
-                 const booked = serviceBookings.map(s => s.slot);
-                 const available = service.slots.filter(s => !booked.includes(s));
-                 service.available = available;
- 
-                 // service.booked = booked;
-                 // service.booked = serviceBookings.map(s => s.slot);
-             })
-             res.send(services);
- 
-         }) */
 
         // !warning about this api
         // This is not the proper way to query
@@ -113,15 +109,18 @@ async function run() {
             return res.send({ success: true, result });
         });
 
-        app.get('/booking', async (req, res) => {
+        app.get('/booking', verifyToken, async (req, res) => {
             const patient = req.query.patient;
-            
-
-            console.log('auth header', authorization);
-
-            const query = { patient: patient };
-            const bookings = await bookingCollections.find(query).toArray();
-            res.send(bookings);
+            const decodedEmail = req.decoded.email;
+            // const decodedEmail = req.decoded.email;
+            if (patient === decodedEmail) {
+                const query = { patient: patient };
+                const bookings = await bookingCollections.find(query).toArray();
+                return res.send(bookings);
+            }
+            else {
+                return res.status(403).send({ message: 'Forbidden access!' });
+            }
         })
 
         /**
