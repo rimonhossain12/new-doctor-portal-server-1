@@ -57,6 +57,13 @@ async function run() {
             res.send(users);
         });
 
+        app.get('/admin/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = await userCollections.findOne({ email: email });
+            const isAdmin = user.role === 'admin';
+            res.send({ admin: isAdmin });
+        });
+
         app.put('/users/:email', async (req, res) => {
             // console.log('api is hitting')
             const email = req.params.email;
@@ -76,14 +83,19 @@ async function run() {
         // admin route
         app.put('/users/admin/:email', verifyToken, async (req, res) => {
             const email = req.params.email;
-            const filter = { email: email };
-
-            const updateDoc = {
-                $set: { role: 'admin' },
-            };
-            const result = await userCollections.updateOne(filter, updateDoc);
-            res.send(result)
-        })
+            const requester = req.decoded.email;
+            const requesterAccount = await userCollections.findOne({ email: requester });
+            if (requesterAccount.role === 'admin') {
+                const filter = { email: email };
+                const updateDoc = {
+                    $set: { role: 'admin' },
+                };
+                const result = await userCollections.updateOne(filter, updateDoc);
+                res.send(result)
+            } else {
+                res.status(403).send({ message: 'Forbidden!' });
+            }
+        });
 
         // !warning about this api
         // This is not the proper way to query
