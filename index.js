@@ -52,6 +52,11 @@ async function run() {
             res.send(service);
         });
 
+        app.get('/allUsers', async (req, res) => {
+            const users = await userCollections.find().toArray();
+            res.send(users);
+        });
+        
         app.put('/users/:email', async (req, res) => {
             console.log('api is hitting')
             const email = req.params.email;
